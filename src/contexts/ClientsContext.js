@@ -1,12 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { useState, createContext } from 'react';
 
+import formatDate from '../helpers/formatDate';
+import CLIENTS_MOCK from '../mocks/clients.json';
+
 export const ClientsContext = createContext();
 
 function ClientsProvider({ children }) {
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState(CLIENTS_MOCK);
   function addClients(client) {
-    setClients(prevState => [...prevState, client]);
+    const clientFormat = Object.defineProperty(client, 'dayService', {
+      value: formatDate(client.dayService),
+      writable: true,
+    });
+    setClients(prevState => [...prevState, clientFormat]);
   }
 
   function getClientById(id) {

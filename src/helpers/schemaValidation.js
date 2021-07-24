@@ -20,7 +20,7 @@ const schema = yup.object().shape({
   state: yup.string().required('Campo obrigatório'),
   storeOpeningHours: yup.string().required('Campo obrigatório'),
   dayService: yup
-    .date()
+    .date('Campo obrigatório')
     .min(new Date(), 'Data inválida')
     .required('Campo obrigatório'),
 });

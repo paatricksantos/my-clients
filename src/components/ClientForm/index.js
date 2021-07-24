@@ -5,9 +5,11 @@ import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
 
 import { ClientsContext } from '../../contexts/ClientsContext';
+import formatDate from '../../helpers/formatDate';
 import getCep from '../../helpers/getCep';
 import getStates from '../../helpers/getStates';
 import schemaValidation from '../../helpers/schemaValidation';
+import CheboxVehicles from '../CheboxVehicles';
 import Button from '../Form/Button';
 import Input from '../Form/Input';
 import Select from '../Form/Select';
@@ -21,17 +23,12 @@ import {
   StoreDataContainer,
 } from './styles';
 
-const dateFormat = new Date()
-  .toLocaleDateString('pt-Br')
-  .split('/')
-  .reverse()
-  .join('-');
-
 function ClientForm({ buttonLabel, data }) {
   const history = useHistory();
   const { clients, addClients, updateClient } = useContext(ClientsContext);
   const [typeClient, setTypeClient] = useState('');
   const [states, setStates] = useState('');
+  const [vehiclesUsed, setVehiclesUsed] = useState(['Moto']);
 
   const {
     register,
@@ -53,6 +50,8 @@ function ClientForm({ buttonLabel, data }) {
         if (key !== 'id') {
           if (key === 'typeClient') {
             setTypeClient(value);
+          } else if (key === 'vehiclesUsed') {
+            setVehiclesUsed(value);
           } else if (key !== 'typeClient') {
             setValue(key, value);
           }
@@ -64,20 +63,31 @@ function ClientForm({ buttonLabel, data }) {
   }, [data, setValue]);
 
   const onSubmit = dados => {
+    if (!vehiclesUsed.length) {
+      setError({ message: 'Preencha uma opção' });
+      return;
+    }
     if (data) {
       const client = {
         id: data.id,
         typeClient,
+        vehiclesUsed,
         ...dados,
       };
       updateClient(client);
     } else {
-      addClients({ id: clients.length + 1, typeClient, ...dados });
+      const client = {
+        id: clients.length + 1,
+        vehiclesUsed,
+        typeClient,
+        dayService: formatDate(dados.dayService),
+        ...dados,
+      };
+      addClients(client);
     }
 
     history.push('/');
   };
-
   function handleBlur(event) {
     const type = event.target.value;
     if (!type) {
@@ -224,9 +234,20 @@ function ClientForm({ buttonLabel, data }) {
           label="Dia do Atendimento"
           error={errors?.dayService?.message}
         >
-          <Input type="date" min={dateFormat} {...register('dayService')} />
+          <Input
+            type="date"
+            min={formatDate(new Date())}
+            {...register('dayService')}
+          />
         </FormGroup>
       </StoreDataContainer>
+
+      <CheboxVehicles
+        values={vehiclesUsed}
+        error={errors?.vehiclesUsed?.message}
+        clearError={clearErrors}
+        setValues={setVehiclesUsed}
+      />
 
       <ButtonContainer>
         <Button type="submit">{buttonLabel}</Button>
